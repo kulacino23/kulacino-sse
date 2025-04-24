@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Monitor</title>
+</head>
+<body>
+  <h2>Data Monitor</h2>
+  <p>Temperature: <span id="temperature">--</span> °C</p>
+  <p>Humidity: <span id="humidity">--</span> %</p>
+
+  <script>
+    // Ganti dengan ws://kulacino.diagtem.xyz:3000 saat di hosting
+    const wsUrl = window.location.protocol === 'https:' ? 
+      'wss://' + window.location.host : 
+      'ws://' + window.location.host;
+    let websocket;
+
+    function init() {
+      connectWebSocket();
+    }
+
+    function connectWebSocket() {
+      websocket = new WebSocket(wsUrl);
+      
+      websocket.onopen = () => {
+        console.log('Terhubung ke WebSocket');
+      };
+
+      websocket.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          document.getElementById('temperature').textContent = data.temperature;
+          document.getElementById('humidity').textContent = data.humidity;
+          console.log('Menerima data:', data);
+        } catch (e) {
+          console.log('Data tidak valid:', event.data);
+        }
+      };
+
+      websocket.onclose = () => {
+        console.log('Terputus, mencoba reconnect...');
+        setTimeout(connectWebSocket, 2000);
+      };
+
+      websocket.onerror = (error) => {
+        console.log('Error:', error);
+      };
+    }
+
+    window.addEventListener('load', init);
+  </script>
+</body>
+</html>
